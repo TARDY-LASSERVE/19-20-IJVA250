@@ -63,4 +63,12 @@ public class Facture {
     public void setStatut(String statut) {
         this.statut = statut;
     }
+
+    public Double getTotal() {
+        Double total = 0.00;
+        for (LigneFacture ligneFacture : ligneFactures) {
+            total += ligneFacture.getSousTotal();
+        }
+        return total;
+    }
 }
