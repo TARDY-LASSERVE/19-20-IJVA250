@@ -130,25 +130,21 @@ public class ExportController {
         // Creating a Workbook from an Excel file (.xls or .xlsx)
         Workbook workbook = new XSSFWorkbook();
 
-        List<Facture> allFactures = factureService.findAllFactures();
-        Long idClient = Long.valueOf(0);
-        Boolean firstTime = true;
-        for (Facture facture : allFactures) {
-            if(firstTime | !facture.getClient().getId().equals(idClient)){
-                idClient = facture.getClient().getId();
-                firstTime = false;
-                //createClientSheet(idClient, workbook);
+        List<Client> allClients = clientService.findAllClients();
+        for(Client client : allClients) {
+            createClientSheet(client, workbook);
+            List<Facture> allFactures = factureService.findFacturesClient(client.getId());
+            for (Facture facture : allFactures) {
+                createFactureSheet(facture, workbook);
             }
-            createFactureSheet(facture, workbook);
         }
         workbook.write(response.getOutputStream());
         workbook.close();
     }
 
-    private void createClientSheet(Long idClient, Workbook workbook) {
+    private void createClientSheet(Client client, Workbook workbook) {
         //Création d'une feuille par chaque client associé aux feuilles de facture qui suivent dans le fichier
-        Sheet sheet = workbook.createSheet("Client " + idClient);
-        Client client = clientService.findById(idClient);
+        Sheet sheet = workbook.createSheet("Client " + client.getId());
 
         //Création de la ligne des en-têtes
         Row headerRow = sheet.createRow(0);

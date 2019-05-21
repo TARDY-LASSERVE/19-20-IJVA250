@@ -1,6 +1,6 @@
 <table border="1" class="table">
     <thead>
-    <tr>
+    <tr class="text-success">
         <th>Nom</th>
         <th>Prénom</th>
         <th>Ses factures</th>
@@ -8,7 +8,7 @@
     </thead>
     <tbody>
     {{#clients}}
-        <tr>
+        <tr class="text-muted">
             <td>{{nom}}</td>
             <td>{{prenom}}</td>
             <td><a href="/clients/{{id}}/factures/xlsx">Télécharger toutes ses factures</a></td>

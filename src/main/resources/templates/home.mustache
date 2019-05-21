@@ -4,7 +4,7 @@
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
 </head>
 <body>
-    <h1>AMAZON.COM</h1>
+    <h1 class="text-danger">AMAZON.COM</h1>
     <hr/>
     <h1>Clients <a href="/clients/csv">csv</a>-<a href="/clients/xlsx">xlsx</a>-<a>json</a>-<a>xml</a>-<a>pdf</a></h1>
     <hr/>
@@ -18,7 +18,7 @@
 
     {{#factures}}
 
-        <h2>Facture numéro {{id}} de {{client.nom}} {{client.prenom}} <a href="/factures/{{id}}/pdf">pdf</a></h2>
+        <h4 class="text-muted">Facture numéro {{id}} de {{client.nom}} {{client.prenom}} <a href="/factures/{{id}}/pdf">pdf</a></h4>
         {{>factures}}
     {{/factures}}
 </body>
