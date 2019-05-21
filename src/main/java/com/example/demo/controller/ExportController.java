@@ -22,6 +22,7 @@ import java.io.PrintWriter;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Controlleur pour réaliser les exports.
@@ -128,33 +129,80 @@ public class ExportController {
 
         // Creating a Workbook from an Excel file (.xls or .xlsx)
         Workbook workbook = new XSSFWorkbook();
-        Sheet sheet = workbook.createSheet("Factures");
+
+        List<Facture> allFactures = factureService.findAllFactures();
+        Long idClient = Long.valueOf(0);
+        Boolean firstTime = true;
+        for (Facture facture : allFactures) {
+            if(firstTime | !facture.getClient().getId().equals(idClient)){
+                idClient = facture.getClient().getId();
+                firstTime = false;
+                //createClientSheet(idClient, workbook);
+            }
+            createFactureSheet(facture, workbook);
+        }
+        workbook.write(response.getOutputStream());
+        workbook.close();
+    }
+
+    private void createClientSheet(Long idClient, Workbook workbook) {
+        //Création d'une feuille par chaque client associé aux feuilles de facture qui suivent dans le fichier
+        Sheet sheet = workbook.createSheet("Client " + idClient);
+        Client client = clientService.findById(idClient);
 
         //Création de la ligne des en-têtes
-        Row headerRowEntete = sheet.createRow(0);
+        Row headerRow = sheet.createRow(0);
+        headerRow.createCell(0).setCellValue("Nom");
+        headerRow.createCell(1).setCellValue(client.getNom());
+        sheet.autoSizeColumn(0);
+
+        headerRow = sheet.createRow(1);
+        headerRow.createCell(0).setCellValue("Prénom");
+        headerRow.createCell(1).setCellValue(client.getPrenom());
+        sheet.autoSizeColumn(1);
+
+        headerRow = sheet.createRow(2);
+        headerRow.createCell(0).setCellValue("Date de naissance");
+        headerRow.createCell(1).setCellValue(client.getDateNaissance().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+        sheet.autoSizeColumn(2);
+
+    }
+
+    private Workbook createFactureSheet(Facture facture, Workbook workbook) {
+
+        //Création d'une feuille par facture
+        Sheet sheet = workbook.createSheet("Facture " + facture.getId());
+
+        //Création de la ligne des en-têtes
+        Integer i = 0;
+        Row headerRowEntete = sheet.createRow(i);
         headerRowEntete.createCell(0).setCellValue("Nom article");
         headerRowEntete.createCell(1).setCellValue("Quantité");
         headerRowEntete.createCell(2).setCellValue("Prix unitaire");
         headerRowEntete.createCell(3).setCellValue("Prix de la ligne");
+        sheet.autoSizeColumn(i);
 
-        Integer i = 1;
-        List<Facture> allFactures = factureService.findAllFactures();
-        for (Facture facture : allFactures) {
-            for(LigneFacture ligneFacture : facture.getLigneFactures()){
-                Row headerRow = sheet.createRow(i);
-                headerRow.createCell(0).setCellValue(facture.getId());
-                headerRow.createCell(1).setCellValue(ligneFacture.getArticle().getLibelle());
-                headerRow.createCell(2).setCellValue(ligneFacture.getQuantite());
-                headerRow.createCell(3).setCellValue(ligneFacture.getArticle().getPrix());
-                i += 1;
-            }
+        //Création d'une ligne par article
+        for(LigneFacture ligneFacture : facture.getLigneFactures()){
+            i += 1;
+            Row headerRow = sheet.createRow(i);
+            headerRow.createCell(0).setCellValue(ligneFacture.getArticle().getLibelle());
+            headerRow.createCell(1).setCellValue(ligneFacture.getQuantite());
+            headerRow.createCell(2).setCellValue(ligneFacture.getArticle().getPrix());
+            headerRow.createCell(3).setCellValue(ligneFacture.getSousTotal());
+            sheet.autoSizeColumn(i);
         }
+        //Ligne de fin de la facture : TOTAL
+        Row headerRowFooter = sheet.createRow(i+1);
+        headerRowFooter.createCell(2).setCellValue("Total");
+        headerRowFooter.createCell(3).setCellValue(facture.getTotal());
+        sheet.autoSizeColumn(i+1);
 
-        Row headerRowEntete = sheet.createRow(0);
-        headerRowEntete.createCell(0).setCellValue("Total");
-        headerRowEntete.createCell(3).setCellValue();
+        // Create a Font for styling header cells
+        Font headerFont = workbook.createFont();
+        headerFont.setBold(true);
+        headerFont.setColor(IndexedColors.RED.getIndex());
 
-        workbook.write(response.getOutputStream());
-        workbook.close();
+        return workbook;
     }
 }
