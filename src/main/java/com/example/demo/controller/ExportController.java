@@ -121,10 +121,10 @@ public class ExportController {
     @GetMapping("/factures/xlsx")
     public void facturesXLSX(HttpServletRequest request, HttpServletResponse response) throws IOException {
 
-        //Créer un onglet par facture en créant avant chaque facture de préciser la fiche client (infos en ligne)
-        // Entête (si facture) : nom article, qté, prix unitaire, prix de la ligne
+        //Créer un onglet par facture en créant avant chaque facture de préciser la fiche client
+        // Entête de la ligne(si facture) : nom article, qté, prix unitaire, prix de la ligne
         //  gras, rouge avec bordure pour toute la ligne total en fusionnant avec les cellules vides de la ligne pour avoir le mot 'TOTAL' aligné à côté du total
-        //Si client, mettre l'entête en colonne : nom, prenom, date de naissance
+        //Si client, entête de la colonne : nom, prenom, date de naissance
         response.setHeader("Content-Disposition", "attachment; filename=\"factures.xlsx\"");
 
         // Creating a Workbook from an Excel file (.xls or .xlsx)
@@ -150,18 +150,17 @@ public class ExportController {
         Row headerRow = sheet.createRow(0);
         headerRow.createCell(0).setCellValue("Nom");
         headerRow.createCell(1).setCellValue(client.getNom());
-        sheet.autoSizeColumn(0);
 
         headerRow = sheet.createRow(1);
         headerRow.createCell(0).setCellValue("Prénom");
         headerRow.createCell(1).setCellValue(client.getPrenom());
-        sheet.autoSizeColumn(1);
 
         headerRow = sheet.createRow(2);
         headerRow.createCell(0).setCellValue("Date de naissance");
         headerRow.createCell(1).setCellValue(client.getDateNaissance().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
-        sheet.autoSizeColumn(2);
 
+        sheet.autoSizeColumn(0);
+        sheet.autoSizeColumn(1);
     }
 
     private Workbook createFactureSheet(Facture facture, Workbook workbook) {
@@ -176,7 +175,6 @@ public class ExportController {
         headerRowEntete.createCell(1).setCellValue("Quantité");
         headerRowEntete.createCell(2).setCellValue("Prix unitaire");
         headerRowEntete.createCell(3).setCellValue("Prix de la ligne");
-        sheet.autoSizeColumn(i);
 
         //Création d'une ligne par article
         for(LigneFacture ligneFacture : facture.getLigneFactures()){
@@ -186,18 +184,29 @@ public class ExportController {
             headerRow.createCell(1).setCellValue(ligneFacture.getQuantite());
             headerRow.createCell(2).setCellValue(ligneFacture.getArticle().getPrix());
             headerRow.createCell(3).setCellValue(ligneFacture.getSousTotal());
-            sheet.autoSizeColumn(i);
         }
+
+        // Create a Font
+        Font totalFont = workbook.createFont();
+        totalFont.setBold(true);
+        totalFont.setColor(IndexedColors.RED.getIndex());
+        // Create a CellStyle with the font
+        CellStyle totalCellStyle = workbook.createCellStyle();
+        totalCellStyle.setFont(totalFont);
+
         //Ligne de fin de la facture : TOTAL
         Row headerRowFooter = sheet.createRow(i+1);
-        headerRowFooter.createCell(2).setCellValue("Total");
-        headerRowFooter.createCell(3).setCellValue(facture.getTotal());
-        sheet.autoSizeColumn(i+1);
+        Cell cell = headerRowFooter.createCell(2);
+        cell.setCellStyle(totalCellStyle);
+        cell.setCellValue("Total");
+        cell = headerRowFooter.createCell(3);
+        cell.setCellStyle(totalCellStyle);
+        cell.setCellValue(facture.getTotal());
 
-        // Create a Font for styling header cells
-        Font headerFont = workbook.createFont();
-        headerFont.setBold(true);
-        headerFont.setColor(IndexedColors.RED.getIndex());
+        //Alignement des colonnes de la feuille
+        for (int j = 0; j < headerRowEntete.getLastCellNum(); j++){
+            sheet.autoSizeColumn(j);
+        }
 
         return workbook;
     }
