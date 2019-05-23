@@ -6,6 +6,7 @@ import com.example.demo.entity.LigneFacture;
 import com.example.demo.service.*;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -193,12 +194,16 @@ public class ExportController {
         // Create a CellStyle with the font
         CellStyle totalCellStyle = workbook.createCellStyle();
         totalCellStyle.setFont(totalFont);
+        totalCellStyle.setAlignment(HorizontalAlignment.RIGHT);
 
         //Ligne de fin de la facture : TOTAL
-        Row headerRowFooter = sheet.createRow(i+1);
-        Cell cell = headerRowFooter.createCell(2);
+        Integer numTotalLine = i + 1;
+        Row headerRowFooter = sheet.createRow(numTotalLine);
+        sheet.addMergedRegion(new CellRangeAddress(numTotalLine, numTotalLine, 0, 2));
+        Cell cell = headerRowFooter.createCell(0);
         cell.setCellStyle(totalCellStyle);
         cell.setCellValue("Total");
+
         cell = headerRowFooter.createCell(3);
         cell.setCellStyle(totalCellStyle);
         cell.setCellValue(facture.getTotal());
